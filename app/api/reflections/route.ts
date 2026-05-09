@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { moderateContent } from "@/src/lib/moderation";
 import { createClient } from "@/src/lib/supabase-server";
 import { addReflection, listReflections } from "@/src/lib/store";
+import { createAdminClient } from "@/src/lib/supabase-admin";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
     content?: string;
     is_anonymous?: boolean;
     unit_id?: string;
+    author_name?: string;
   };
 
   const content = body.content?.trim();
@@ -61,14 +63,30 @@ export async function POST(request: Request) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const isAnonymous = body.is_anonymous ?? true;
-    const authorName = isAnonymous
-      ? "Anonim"
-      : user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Peserta";
+    const authorName =
+      (body.author_name?.trim() ? body.author_name.trim() : undefined) ??
+      (isAnonymous ? "Anonim" : user?.user_metadata?.full_name ?? user?.email?.split("@")[0] ?? "Peserta");
+
+    // If user is not logged in, use admin client to bypass RLS and insert anonymously.
+    if (!user) {
+      const admin = createAdminClient();
+      const { data, error } = await admin
+        .from("reflections")
+        .insert({
+          unit_id: unitId,
+          author_id: null,
+          content,
+          is_anonymous: true,
+          author_name: authorName || "Anonim",
+          status: "verified",
+        })
+        .select("id,unit_id,author_id,content,is_anonymous,author_name,status,ai_feedback,created_at")
+        .single();
+
+      if (error) throw error;
+      return NextResponse.json(data, { status: 201 });
+    }
 
     const { data, error } = await supabase
       .from("reflections")

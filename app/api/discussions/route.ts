@@ -9,6 +9,13 @@ export async function GET(request: Request) {
 
   try {
     const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     let query = supabase
       .from("discussions")
       .select("id,unit_id,author_id,title,content,status,ai_feedback,created_at")

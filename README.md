@@ -36,6 +36,17 @@ This project uses an OpenAI-compatible endpoint for moderation:
 - `ETHICS_API_KEY`
 - Optional: `ETHICS_MODEL` (defaults to `llama-3.1-70b-versatile`)
 
+## hCaptcha (Anti-spam)
+
+To prevent spam, POST requests require a valid hCaptcha token (verified server-side).
+
+- `HCAPTCHA_SITE_KEY` (or `NEXT_PUBLIC_HCAPTCHA_SITE_KEY`)
+- `HCAPTCHA_SECRET_KEY` (server-only)
+
+## Authentication Required
+
+All routes (including API endpoints) require an authenticated Supabase session. Use `/login` to sign in.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

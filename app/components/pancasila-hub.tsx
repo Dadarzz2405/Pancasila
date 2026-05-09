@@ -12,7 +12,7 @@ import {
 } from "react-icons/ri";
 import type { Discussion, Message, Reflection, Unit } from "@/src/lib/types";
 import { units as defaultUnits } from "@/src/lib/content";
-import { getCurrentUser, signInAnonymously } from "@/src/lib/auth";
+import { getCurrentUser } from "@/src/lib/auth";
 import { supabase } from "@/src/lib/supabase";
 
 function formatRelativeStamp(value: string) {
@@ -49,7 +49,7 @@ export function PancasilaHub() {
   const [selectedDiscussionId, setSelectedDiscussionId] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [authReady, setAuthReady] = useState(false);
-  const [authError, setAuthError] = useState<string>("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [reflectionInput, setReflectionInput] = useState("");
   const [discussionTitle, setDiscussionTitle] = useState("");
   const [discussionInput, setDiscussionInput] = useState("");
@@ -73,18 +73,10 @@ export function PancasilaHub() {
   useEffect(() => {
     const init = async () => {
       try {
-        const existing = await getCurrentUser();
-        if (!existing) {
-          try {
-            await signInAnonymously();
-          } catch (error) {
-            const message =
-              error instanceof Error ? error.message : "Anonymous sign-in failed.";
-            setAuthError(
-              `Supabase: anonymous sign-ins disabled. Enable it in Auth settings to use chat + posting. (${message})`,
-            );
-          }
-        }
+        // Do not auto-create sessions. Supabase projects often enable captcha protection,
+        // which blocks anonymous sign-in unless a captcha token is provided.
+        const user = await getCurrentUser();
+        setIsLoggedIn(Boolean(user));
       } finally {
         setAuthReady(true);
       }
@@ -108,6 +100,18 @@ export function PancasilaHub() {
         return data[0].id;
       });
     });
+
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      const loggedIn = Boolean(session?.user);
+      setIsLoggedIn(loggedIn);
+      if (!loggedIn) {
+        // Clear discussion state on logout without relying on effects.
+        setDiscussions([]);
+        setSelectedDiscussionId("");
+        setMessages([]);
+      }
+    });
+    return () => data.subscription.unsubscribe();
   }, [authReady]);
 
   useEffect(() => {
@@ -118,6 +122,8 @@ export function PancasilaHub() {
     void readJsonOrNull<Reflection[]>(`/api/reflections?unit_id=${selectedUnitId}`).then((data) => {
       if (data) setReflections(data);
     });
+    if (!isLoggedIn) return;
+
     void readJsonOrNull<Discussion[]>(`/api/discussions?unit_id=${selectedUnitId}`).then((data) => {
       if (!data) return;
       setDiscussions(data);
@@ -132,20 +138,20 @@ export function PancasilaHub() {
         setMessages([]);
       }
     });
-  }, [authReady, selectedUnitId]);
+  }, [authReady, isLoggedIn, selectedUnitId]);
 
   useEffect(() => {
-    if (!authReady || !selectedDiscussionId) {
+    if (!authReady || !isLoggedIn || !selectedDiscussionId) {
       return;
     }
 
     void readJsonOrNull<Message[]>(`/api/messages?discussion_id=${selectedDiscussionId}`).then((data) => {
       if (data) setMessages(data);
     });
-  }, [authReady, selectedDiscussionId]);
+  }, [authReady, isLoggedIn, selectedDiscussionId]);
 
   useEffect(() => {
-    if (!authReady || !selectedDiscussionId) {
+    if (!authReady || !isLoggedIn || !selectedDiscussionId) {
       return;
     }
 
@@ -174,7 +180,7 @@ export function PancasilaHub() {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [authReady, selectedDiscussionId]);
+  }, [authReady, isLoggedIn, selectedDiscussionId]);
 
   async function submitReflection(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -315,12 +321,6 @@ export function PancasilaHub() {
           </div>
 
           <div className="mt-auto space-y-3 pt-8">
-            {authError ? (
-              <div className="rounded-[24px] border border-white/15 bg-[#ffefe3] p-4 text-sm text-[#6f1b00]">
-                <div className="mb-2 font-semibold">Auth warning</div>
-                <p className="text-sm leading-6">{authError}</p>
-              </div>
-            ) : null}
             <div className="rounded-[24px] border border-white/15 bg-black/15 p-4">
               <div className="mb-2 flex items-center gap-2 text-sm font-medium">
                 <RiShieldCheckLine className="h-4 w-4 text-[#f3d27a]" />
@@ -428,6 +428,21 @@ export function PancasilaHub() {
               <p className="text-base leading-7 text-stone-700">{selectedUnit?.hook_question}</p>
             </div>
 
+            {!isLoggedIn ? (
+              <div className="mb-6 rounded-[28px] border border-[#ead7c8] bg-white/85 p-6">
+                <h3 className="text-lg font-semibold">Masuk untuk berdiskusi</h3>
+                <p className="mt-2 text-sm leading-6 text-stone-600">
+                  Kamu bisa berbagi refleksi tanpa login. Untuk melihat, membuat diskusi, dan chat, silakan masuk dulu.
+                </p>
+                <a
+                  href="/login"
+                  className="mt-4 inline-flex items-center justify-center rounded-full bg-[#b71c1c] px-5 py-3 text-sm font-semibold text-white hover:bg-[#8f1313]"
+                >
+                  Masuk / Daftar
+                </a>
+              </div>
+            ) : null}
+
             <div className="mb-6 grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -474,6 +489,7 @@ export function PancasilaHub() {
                     value={discussionTitle}
                     onChange={(event) => setDiscussionTitle(event.target.value)}
                     placeholder="Judul diskusi"
+                    disabled={!isLoggedIn}
                     className="w-full rounded-[20px] border border-stone-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#b71c1c]"
                   />
                   <textarea
@@ -481,11 +497,12 @@ export function PancasilaHub() {
                     onChange={(event) => setDiscussionInput(event.target.value)}
                     rows={4}
                     placeholder="Jelaskan isu atau pertanyaan yang ingin dibahas."
+                    disabled={!isLoggedIn}
                     className="w-full rounded-[20px] border border-stone-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#b71c1c]"
                   />
                   <button
                     type="submit"
-                    disabled={busyState === "discussion"}
+                    disabled={busyState === "discussion" || !isLoggedIn}
                     className="inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <RiArrowRightUpLine className="h-4 w-4" />
@@ -533,11 +550,12 @@ export function PancasilaHub() {
                   value={messageInput}
                   onChange={(event) => setMessageInput(event.target.value)}
                   placeholder="Kirim pandangan singkat yang konstruktif."
+                  disabled={!isLoggedIn}
                   className="flex-1 rounded-full border border-stone-200 bg-white px-4 py-3 text-sm outline-none focus:border-[#b71c1c]"
                 />
                 <button
                   type="submit"
-                  disabled={busyState === "message"}
+                  disabled={busyState === "message" || !isLoggedIn}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-[#b71c1c] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#8f1313] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <RiSendPlaneFill className="h-4 w-4" />
