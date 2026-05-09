@@ -80,6 +80,7 @@ export function AuthForm(props: { redirectTo?: string }) {
           password,
           options: {
             data: { full_name: name.trim() },
+            captchaToken,
           },
         });
         if (signUpError) throw signUpError;
@@ -87,6 +88,7 @@ export function AuthForm(props: { redirectTo?: string }) {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
+          options: { captchaToken },
         });
         if (signInError) throw signInError;
       }
@@ -189,4 +191,3 @@ export function AuthForm(props: { redirectTo?: string }) {
     </div>
   );
 }
-
