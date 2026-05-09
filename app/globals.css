@@ -14,22 +14,22 @@
   --color-red: var(--pancasila-red);
   --color-white: var(--pancasila-white);
   --color-gold: var(--pancasila-gold);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --font-serif: Georgia, "Times New Roman", serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --pancasila-red: #D32F2F;
-    --pancasila-white: #FFFFFF;
-    --pancasila-gold: #D4AF37;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #f5efec;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  margin: 0;
 }

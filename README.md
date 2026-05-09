@@ -18,7 +18,23 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Supabase Setup
+
+1. Create a Supabase project.
+2. In Supabase Dashboard, open **SQL Editor** and run `supabase/migrations/001_initial_schema.sql`.
+3. Set `.env` variables:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY` (server-only; never expose to client)
+
+If the schema is not applied yet, the app falls back to demo in-memory data and you may see errors like `PGRST205` in the server logs.
+
+## Moderation (Ethics Compiler)
+
+This project uses an OpenAI-compatible endpoint for moderation:
+- `ETHICS_API_URL` (example: `https://api.groq.com/openai/v1`)
+- `ETHICS_API_KEY`
+- Optional: `ETHICS_MODEL` (defaults to `llama-3.1-70b-versatile`)
 
 ## Learn More
 
