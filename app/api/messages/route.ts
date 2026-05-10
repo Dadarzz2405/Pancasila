@@ -1,6 +1,23 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase-server";
 import { addMessage, listMessages } from "@/src/lib/store";
+import { createAdminClient } from "@/src/lib/supabase-admin";
+
+type AuthUserLike = {
+  email?: string | null;
+  user_metadata?: {
+    full_name?: string | null;
+    [key: string]: unknown;
+  } | null;
+};
+
+function displayNameFromUser(user: AuthUserLike | null) {
+  const fullName = (user?.user_metadata?.full_name as string | undefined)?.trim();
+  if (fullName) return fullName;
+  const email = user?.email ?? "";
+  if (email.includes("@")) return email.split("@")[0];
+  return "Peserta";
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -27,7 +44,26 @@ export async function GET(request: Request) {
 
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json(data);
+
+    const authorIds = Array.from(
+      new Set((data ?? []).map((message) => message.author_id).filter(Boolean)),
+    ) as string[];
+
+    const admin = createAdminClient();
+    const entries = await Promise.all(
+      authorIds.map(async (id) => {
+        const { data: userData } = await admin.auth.admin.getUserById(id);
+        return [id, displayNameFromUser(userData.user ?? null)] as const;
+      }),
+    );
+
+    const authorMap = new Map(entries);
+    const enriched = (data ?? []).map((message) => ({
+      ...message,
+      author_name: message.author_id ? authorMap.get(message.author_id) ?? "Peserta" : "Anonim",
+    }));
+
+    return NextResponse.json(enriched);
   } catch (error) {
     console.error("Messages API fallback:", error);
     return NextResponse.json(listMessages(discussionId));
@@ -71,7 +107,13 @@ export async function POST(request: Request) {
       .single();
 
     if (error) throw error;
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json(
+      {
+        ...data,
+        author_name: displayNameFromUser(user),
+      },
+      { status: 201 },
+    );
   } catch (error) {
     console.error("Messages POST fallback:", error);
     return NextResponse.json(

@@ -50,6 +50,8 @@ export function PancasilaHub() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [authReady, setAuthReady] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [currentUserName, setCurrentUserName] = useState<string>("");
   const [reflectionInput, setReflectionInput] = useState("");
   const [discussionTitle, setDiscussionTitle] = useState("");
   const [discussionInput, setDiscussionInput] = useState("");
@@ -77,6 +79,12 @@ export function PancasilaHub() {
         // which blocks anonymous sign-in unless a captcha token is provided.
         const user = await getCurrentUser();
         setIsLoggedIn(Boolean(user));
+        setCurrentUserId(user?.id ?? "");
+        setCurrentUserName(
+          (user?.user_metadata?.full_name as string | undefined) ??
+            user?.email?.split("@")[0] ??
+            "",
+        );
       } finally {
         setAuthReady(true);
       }
@@ -104,6 +112,12 @@ export function PancasilaHub() {
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       const loggedIn = Boolean(session?.user);
       setIsLoggedIn(loggedIn);
+      setCurrentUserId(session?.user?.id ?? "");
+      setCurrentUserName(
+        (session?.user?.user_metadata?.full_name as string | undefined) ??
+          session?.user?.email?.split("@")[0] ??
+          "",
+      );
       if (!loggedIn) {
         // Clear discussion state on logout without relying on effects.
         setDiscussions([]);
@@ -531,18 +545,33 @@ export function PancasilaHub() {
               </div>
 
               <div className="mb-4 max-h-[320px] space-y-3 overflow-y-auto rounded-[24px] border border-stone-200 bg-white p-4">
-                {messages.map((message, index) => (
-                  <div
-                    key={message.id}
-                    className={`max-w-[85%] rounded-[20px] px-4 py-3 text-sm leading-6 ${
-                      index % 2 === 0
-                        ? "bg-[#f8e7dc] text-stone-800"
-                        : "ml-auto bg-[#8b1115] text-white"
-                    }`}
-                  >
-                    {message.content}
-                  </div>
-                ))}
+                {messages.map((message) => {
+                  const isMine = Boolean(message.author_id && message.author_id === currentUserId);
+                  const authorLabel = isMine
+                    ? currentUserName || "Kamu"
+                    : message.author_name || "Peserta";
+
+                  return (
+                    <div key={message.id} className={isMine ? "ml-auto max-w-[85%]" : "max-w-[85%]"}>
+                      <div
+                        className={`mb-1 text-[11px] uppercase tracking-[0.16em] ${
+                          isMine ? "text-stone-400 text-right" : "text-stone-500"
+                        }`}
+                      >
+                        {authorLabel}
+                      </div>
+                      <div
+                        className={`rounded-[20px] px-4 py-3 text-sm leading-6 ${
+                          isMine
+                            ? "bg-[#8b1115] text-white"
+                            : "bg-[#f8e7dc] text-stone-800"
+                        }`}
+                      >
+                        {message.content}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
               <form onSubmit={submitMessage} className="flex flex-col gap-3 sm:flex-row">

@@ -33,6 +33,7 @@ export interface Message {
   id: string;
   discussion_id: string;
   author_id: string | null;
+  author_name?: string | null;
   content: string;
   created_at: string;
 }
