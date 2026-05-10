@@ -7,7 +7,7 @@ const blockedPatterns = [
   /\bkafir\b/i,
   /\bhoaks\b.*\bsebarkan\b/i,
   /\bfitnah\b/i,
-  /\bserang\b/i,
+  /\bhumam\b/i,
 ];
 
 function heuristicModeration(content: string) {
@@ -16,14 +16,16 @@ function heuristicModeration(content: string) {
   if (trimmed.length < 12) {
     return {
       valid: false,
-      reason: "Tulis pendapat yang lebih lengkap agar bisa dipahami dan didiskusikan.",
+      reason:
+        "Tulis pendapat yang lebih lengkap agar bisa dipahami dan didiskusikan.",
     };
   }
 
   if (blockedPatterns.some((pattern) => pattern.test(trimmed))) {
     return {
       valid: false,
-      reason: "Bahasannya perlu dibuat lebih etis dan tidak menyerang pihak tertentu.",
+      reason:
+        "Bahasannya perlu dibuat lebih etis dan tidak menyerang pihak tertentu.",
     };
   }
 
@@ -51,7 +53,7 @@ export async function moderateContent(content: string) {
         {
           role: "system",
           content:
-            "You are a Pancasila moderator. Assess whether the text is truthful, ethical, and relevant for civic discussion. Respond ONLY as JSON: {\"valid\": boolean, \"reason\": string}.",
+            'You are a Pancasila moderator. Assess whether the text is truthful, ethical, and relevant for civic discussion. Respond ONLY as JSON: {"valid": boolean, "reason": string}.',
         },
         { role: "user", content: content.trim() },
       ],

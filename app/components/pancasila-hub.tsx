@@ -60,7 +60,9 @@ export function PancasilaHub() {
   const [reflectionError, setReflectionError] = useState("");
   const [discussionError, setDiscussionError] = useState("");
   const [messageError, setMessageError] = useState("");
-  const [busyState, setBusyState] = useState<"discussion" | "message" | "reflection" | null>(null);
+  const [busyState, setBusyState] = useState<
+    "discussion" | "message" | "reflection" | null
+  >(null);
 
   const selectedUnit = useMemo(
     () => units.find((unit) => unit.id === selectedUnitId) ?? units[0],
@@ -68,7 +70,10 @@ export function PancasilaHub() {
   );
 
   const selectedDiscussion = useMemo(
-    () => discussions.find((discussion) => discussion.id === selectedDiscussionId) ?? discussions[0],
+    () =>
+      discussions.find(
+        (discussion) => discussion.id === selectedDiscussionId,
+      ) ?? discussions[0],
     [discussions, selectedDiscussionId],
   );
 
@@ -133,12 +138,16 @@ export function PancasilaHub() {
       return;
     }
 
-    void readJsonOrNull<Reflection[]>(`/api/reflections?unit_id=${selectedUnitId}`).then((data) => {
+    void readJsonOrNull<Reflection[]>(
+      `/api/reflections?unit_id=${selectedUnitId}`,
+    ).then((data) => {
       if (data) setReflections(data);
     });
     if (!isLoggedIn) return;
 
-    void readJsonOrNull<Discussion[]>(`/api/discussions?unit_id=${selectedUnitId}`).then((data) => {
+    void readJsonOrNull<Discussion[]>(
+      `/api/discussions?unit_id=${selectedUnitId}`,
+    ).then((data) => {
       if (!data) return;
       setDiscussions(data);
       setSelectedDiscussionId((current) => {
@@ -159,7 +168,9 @@ export function PancasilaHub() {
       return;
     }
 
-    void readJsonOrNull<Message[]>(`/api/messages?discussion_id=${selectedDiscussionId}`).then((data) => {
+    void readJsonOrNull<Message[]>(
+      `/api/messages?discussion_id=${selectedDiscussionId}`,
+    ).then((data) => {
       if (data) setMessages(data);
     });
   }, [authReady, isLoggedIn, selectedDiscussionId]);
@@ -215,7 +226,9 @@ export function PancasilaHub() {
       const payload = (await response.json()) as Reflection | { error: string };
 
       if (!response.ok) {
-        setReflectionError("error" in payload ? payload.error : "Gagal mengirim refleksi.");
+        setReflectionError(
+          "error" in payload ? payload.error : "Gagal mengirim refleksi.",
+        );
         return;
       }
 
@@ -245,7 +258,9 @@ export function PancasilaHub() {
       const payload = (await response.json()) as Discussion | { error: string };
 
       if (!response.ok) {
-        setDiscussionError("error" in payload ? payload.error : "Gagal membuat diskusi.");
+        setDiscussionError(
+          "error" in payload ? payload.error : "Gagal membuat diskusi.",
+        );
         return;
       }
 
@@ -283,7 +298,9 @@ export function PancasilaHub() {
       const payload = (await response.json()) as Message | { error: string };
 
       if (!response.ok) {
-        setMessageError("error" in payload ? payload.error : "Gagal mengirim pesan.");
+        setMessageError(
+          "error" in payload ? payload.error : "Gagal mengirim pesan.",
+        );
         return;
       }
 
@@ -308,9 +325,12 @@ export function PancasilaHub() {
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs uppercase tracking-[0.24em] text-white/80">
               Civic Survival Guide
             </div>
-            <h1 className="font-serif text-4xl leading-tight">Pancasila Digital Hub</h1>
+            <h1 className="font-serif text-4xl leading-tight">
+              Pancasila Digital Hub
+            </h1>
             <p className="mt-3 max-w-sm text-sm leading-6 text-white/78">
-              Ruang belajar untuk siswa dan pemilih pemula menimbang refleksi, diskusi, dan etika digital lewat nilai Pancasila.
+              Ruang belajar untuk siswa dan pemilih pemula menimbang refleksi,
+              diskusi, dan etika digital lewat nilai Pancasila.
             </p>
           </div>
 
@@ -334,25 +354,12 @@ export function PancasilaHub() {
                     </span>
                     <RiArrowRightUpLine className="h-4 w-4" />
                   </div>
-                  <div className="text-sm font-semibold leading-5">{unit.title}</div>
+                  <div className="text-sm font-semibold leading-5">
+                    {unit.title}
+                  </div>
                 </button>
               );
             })}
-          </div>
-
-          <div className="mt-auto space-y-3 pt-8">
-            <div className="rounded-[24px] border border-white/15 bg-black/15 p-4">
-              <div className="mb-2 flex items-center gap-2 text-sm font-medium">
-                <RiShieldCheckLine className="h-4 w-4 text-[#f3d27a]" />
-                Moderation status
-              </div>
-              <p className="text-sm text-white/78">
-                Ethics Compiler aktif. Saat `OPENAI_API_KEY` belum diatur, aplikasi memakai filter heuristik demo.
-              </p>
-            </div>
-            <div className="rounded-[24px] border border-white/15 bg-white/8 p-4 text-sm text-white/78">
-              Guest mode aktif. Penyimpanan berjalan di memori server sampai Supabase dihubungkan.
-            </div>
           </div>
         </aside>
 
@@ -364,7 +371,9 @@ export function PancasilaHub() {
                   <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-[#fbe4bf] px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-[#7b3011]">
                     Reflection Wall
                   </div>
-                  <h2 className="text-2xl font-semibold">{selectedUnit?.title}</h2>
+                  <h2 className="text-2xl font-semibold">
+                    {selectedUnit?.title}
+                  </h2>
                 </div>
                 <span
                   className="hidden rounded-full px-3 py-1 text-xs font-semibold text-white sm:inline-flex"
@@ -394,7 +403,9 @@ export function PancasilaHub() {
                   <label className="inline-flex items-center gap-2 text-sm text-stone-600">
                     <input
                       checked={postAnonymously}
-                      onChange={(event) => setPostAnonymously(event.target.checked)}
+                      onChange={(event) =>
+                        setPostAnonymously(event.target.checked)
+                      }
                       type="checkbox"
                       className="h-4 w-4 rounded border-stone-300 text-[#b71c1c]"
                     />
@@ -433,7 +444,9 @@ export function PancasilaHub() {
                       {formatRelativeStamp(reflection.created_at)}
                     </span>
                   </div>
-                  <p className="text-sm leading-7 text-stone-700">{reflection.content}</p>
+                  <p className="text-sm leading-7 text-stone-700">
+                    {reflection.content}
+                  </p>
                 </article>
               ))}
             </div>
@@ -445,14 +458,19 @@ export function PancasilaHub() {
                 <RiGovernmentLine className="h-4 w-4" />
                 Discussion Starter
               </div>
-              <p className="text-base leading-7 text-stone-700">{selectedUnit?.hook_question}</p>
+              <p className="text-base leading-7 text-stone-700">
+                {selectedUnit?.hook_question}
+              </p>
             </div>
 
             {!isLoggedIn ? (
               <div className="mb-6 rounded-[28px] border border-[#ead7c8] bg-white/85 p-6">
-                <h3 className="text-lg font-semibold">Masuk untuk berdiskusi</h3>
+                <h3 className="text-lg font-semibold">
+                  Masuk untuk berdiskusi
+                </h3>
                 <p className="mt-2 text-sm leading-6 text-stone-600">
-                  Kamu bisa berbagi refleksi tanpa login. Untuk melihat, membuat diskusi, dan chat, silakan masuk dulu.
+                  Kamu bisa berbagi refleksi tanpa login. Untuk melihat, membuat
+                  diskusi, dan chat, silakan masuk dulu.
                 </p>
                 <a
                   href="/login"
@@ -495,7 +513,9 @@ export function PancasilaHub() {
                             {formatRelativeStamp(discussion.created_at)}
                           </span>
                         </div>
-                        <p className="text-sm leading-6 text-stone-600">{discussion.content}</p>
+                        <p className="text-sm leading-6 text-stone-600">
+                          {discussion.content}
+                        </p>
                       </button>
                     );
                   })}
@@ -540,9 +560,12 @@ export function PancasilaHub() {
             <div className="rounded-[32px] border border-[#ecd8c7] bg-[#fffdf9] p-5">
               <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-semibold">{selectedDiscussion?.title ?? "Pilih diskusi"}</h3>
+                  <h3 className="text-lg font-semibold">
+                    {selectedDiscussion?.title ?? "Pilih diskusi"}
+                  </h3>
                   <p className="text-sm text-stone-600">
-                    {selectedDiscussion?.content ?? "Percakapan akan muncul di sini."}
+                    {selectedDiscussion?.content ??
+                      "Percakapan akan muncul di sini."}
                   </p>
                 </div>
                 <span className="rounded-full bg-[#fbe4bf] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#8d4000]">
@@ -552,16 +575,23 @@ export function PancasilaHub() {
 
               <div className="mb-4 max-h-[320px] space-y-3 overflow-y-auto rounded-[24px] border border-stone-200 bg-white p-4">
                 {messages.map((message) => {
-                  const isMine = Boolean(message.author_id && message.author_id === currentUserId);
+                  const isMine = Boolean(
+                    message.author_id && message.author_id === currentUserId,
+                  );
                   const authorLabel = isMine
                     ? currentUserName || "Kamu"
                     : message.author_name || "Peserta";
 
                   return (
-                    <div key={message.id} className={isMine ? "ml-auto max-w-[85%]" : "max-w-[85%]"}>
+                    <div
+                      key={message.id}
+                      className={isMine ? "ml-auto max-w-[85%]" : "max-w-[85%]"}
+                    >
                       <div
                         className={`mb-1 text-[11px] uppercase tracking-[0.16em] ${
-                          isMine ? "text-stone-400 text-right" : "text-stone-500"
+                          isMine
+                            ? "text-stone-400 text-right"
+                            : "text-stone-500"
                         }`}
                       >
                         {authorLabel}
@@ -580,7 +610,10 @@ export function PancasilaHub() {
                 })}
               </div>
 
-              <form onSubmit={submitMessage} className="flex flex-col gap-3 sm:flex-row">
+              <form
+                onSubmit={submitMessage}
+                className="flex flex-col gap-3 sm:flex-row"
+              >
                 <input
                   value={messageInput}
                   onChange={(event) => setMessageInput(event.target.value)}
