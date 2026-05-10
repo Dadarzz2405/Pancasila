@@ -288,7 +288,13 @@ export function PancasilaHub() {
       }
 
       setMessageInput("");
-      setMessages((current) => [...current, payload as Message]);
+      setMessages((current) => {
+        const message = payload as Message;
+        if (current.some((entry) => entry.id === message.id)) {
+          return current;
+        }
+        return [...current, message];
+      });
     } finally {
       setBusyState(null);
     }
